@@ -53,6 +53,10 @@
     tr:hover {
       background-color: #1f242c;
     }
+    .total-row {
+      background-color: #21262d;
+      font-weight: bold;
+    }
     .status-msg {
       text-align: center;
       padding: 20px;
@@ -101,18 +105,39 @@
           return;
         }
 
+        let grandTotalQty = 0;
+        let grandTotalSales = 0;
+
         data.items.forEach(item => {
+          const qty = parseFloat(item.total_qty) || 0;
+          const sales = parseFloat(item.total_sales) || 0;
+
+          grandTotalQty += qty;
+          grandTotalSales += sales;
+
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${item.it_code || '-'}</td>
             <td>${item.it_desc || 'Unknown Item'}</td>
             <td>${item.item_size || 'STD'}</td>
-            <td><strong>${item.total_qty}</strong></td>
+            <td><strong>${qty.toFixed(2)}</strong></td>
             <td>Rs. ${parseFloat(item.unit_price).toFixed(2)}</td>
-            <td style="color: #00ff88; font-weight: bold;">Rs. ${parseFloat(item.total_sales).toFixed(2)}</td>
+            <td style="color: #00ff88; font-weight: bold;">Rs. ${sales.toFixed(2)}</td>
           `;
           tbody.appendChild(tr);
         });
+
+        // Append Grand Total Row
+        const totalTr = document.createElement('tr');
+        totalTr.className = 'total-row';
+        totalTr.innerHTML = `
+          <td colspan="3" style="text-align: right; color: #00ff88;">GRAND TOTAL:</td>
+          <td style="color: #00ff88;">${grandTotalQty.toFixed(2)}</td>
+          <td>-</td>
+          <td style="color: #00ff88; font-size: 1.1em;">Rs. ${grandTotalSales.toFixed(2)}</td>
+        `;
+        tbody.appendChild(totalTr);
+
       } catch (error) {
         console.error('Error fetching item summary:', error);
         document.getElementById('summary-table-body').innerHTML = `<tr><td colspan="6" class="status-msg" style="color: #ff4d4d;">Failed to load item summary data.</td></tr>`;
