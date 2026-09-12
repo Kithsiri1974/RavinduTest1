@@ -704,3 +704,49 @@ body {
 #ds-total-orders {
   color: #000000;
 }
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+export default function DaySummaryDrawer({ itemsData }) {
+  const chartData = {
+    labels: itemsData.map(item => item.name), // e.g., ['Caramel Pudding', 'Beef Curry', ...]
+    datasets: [
+      {
+        label: 'Quantity Sold Today',
+        data: itemsData.map(item => item.quantity),
+        backgroundColor: 'rgba(236, 72, 153, 0.7)',
+      },
+    ],
+  };
+
+  return (
+    <div className="left-drawer-content">
+      <h2>Day Item Summary</h2>
+      <div className="chart-container" style={{ width: '100%', height: '300px' }}>
+        <Bar data={chartData} options={{ maintainAspectRatio: false }} />
+      </div>
+    </div>
+  );
+}
+.drawer-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.drawer-item {
+  text-decoration: none;
+  color: #333;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.drawer-item:hover {
+  background-color: #e9ecef;
+  color: #007bff;
+}
