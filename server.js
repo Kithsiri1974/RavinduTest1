@@ -316,6 +316,15 @@ app.post("/api/place-order", async (req, res) => {
     return res.status(500).json({ success: false, error: "Failed to place order", details: error.message });
   }
 });
+// Explicit route for Day Item Summary page
+app.get("/day-item-summary.html", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public", "day-item-summary.html"), (err) => {
+    if (err) {
+      res.sendFile(path.join(process.cwd(), "day-item-summary.html"));
+    }
+  });
+});
+
 
 // Root Fallback Route
 app.get("/", (req, res) => {
@@ -331,3 +340,29 @@ module.exports = app;
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
 }
+// Item-wise Daily Sales Summary API
+app.get("/api/day-item-summary", async (req, res) => {
+  try {
+    const db = getDb();
+    const itemsSummary = await db`
+      SELECT 
+        o.it_code,
+        o.it_desc,
+        o.item_size,
+        SUM(o.qty) as total_qty,
+        COALESCE(s.it_uprise_sal, 0) as unit_price,
+        SUM(o.qty * COALESCE(s.it_uprise_sal, 0)) as total_sales
+      FROM ord_req o
+      LEFT JOIN stock_mast s 
+        ON LOWER(TRIM(o.it_code)) = LOWER(TRIM(s.it_code))
+       AND LOWER(TRIM(COALESCE(o.item_size, 'STD'))) = LOWER(TRIM(COALESCE(s.item_size, 'STD')))
+      WHERE DATE(o.req_date) = CURRENT_DATE
+      GROUP BY o.it_code, o.it_desc, o.item_size, s.it_uprise_sal
+      ORDER BY total_sales DESC
+    `;
+    res.json({ success: true, items: itemsSummary });
+  } catch (err) {
+    console.error("Day Item Summary Error:", err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
